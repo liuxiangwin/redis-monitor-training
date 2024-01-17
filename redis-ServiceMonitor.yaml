@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor # prometheus-operator 定义的CRD
+metadata:
+  labels:
+    k8s-app: redis-standalone-exporter
+    prometheus.io/monitor: "true"
+  name: redis-metrics
+  namespace: redis-cluster-helm-demo
+spec:
+  jobLabel: app # 监控数据的job标签指定为metrics label的值，即加上数据标签job=redis-exporter
+  selector:
+    matchLabels:
+      app: redis-standalone-exporter # 自动发现label中有 app=redis-exporter 的service
+  namespaceSelector:
+    matchNames: # 配置需要自动发现的命名空间，可以配置多个
+    - redis-cluster-helm-demo
+  endpoints:
+  - port: redis-standalone-exporter # 拉去metric的端口，这个写的是 service的端口名称，即 service yaml的spec.ports.name
+    interval: 15s # 拉取metric的时间间隔
+    path: /metrics

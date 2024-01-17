@@ -1,0 +1,46 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-standalone-exporter
+  namespace: redis-cluster-helm-demo
+  labels:
+    app: redis-standalone-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-standalone-exporter
+  template:
+    metadata:
+      labels:
+        app: redis-standalone-exporter
+    spec:
+      containers:
+      - name: redis-standalone-exporter
+        image: oliver006/redis_exporter:latest
+        imagePullPolicy: IfNotPresent
+        # 此处添加redis相关配置，例如:地址、密码等
+        # 如果是监控k8s容器外的Redis，则此处的redis.addr对应的值需要添加redis://前缀，类似下面注释的那样
+        # args: ["-redis.addr", "redis://redis-cluster:6379", "-redis.password", "redhat"]
+        args: ["-redis.addr", "redis-cluster:6379", "-redis.password", "redhat"]
+        ports:
+        - containerPort: 9121
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: redis-standalone-exporter
+  name: redis-standalone-exporter
+  namespace: redis-cluster-helm-demo
+spec:
+  type: ClusterIP
+  ports:
+  - name: metrics
+    port: 9121
+    protocol: TCP
+    targetPort: 9121
+  selector:
+    app: redis-standalone-exporter
